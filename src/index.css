@@ -1,10 +1,15 @@
 .map-container {
-    height: 100%;
-    width: 100%;
-    border: 2px solid #333;
-    border-radius: 0.5rem;
-  }
+  height: 100%;
+  width: 100%;
+  border: 2px solid #1E90FF; /* Blue border */
+  border-radius: 0.5rem;
   
+}
+
+.leaflet-container .grey-map {
+  filter: grayscale(100%);
+}
+
 
 @tailwind base;
 @tailwind components;

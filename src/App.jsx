@@ -3,7 +3,7 @@ import { FilterGroup } from './components/FilterGroup';
 import { StatCard } from './components/StatCard';
 import { BarChart } from './components/BarChart';
 import { AreaChart } from './components/AreaChart';
-import { DelhiMap } from './components/DelhiMap';
+import { NewYorkMap } from './components/NewYorkMap.jsx';
 import { fetchCrimeData } from './services/api';
 
 function App() {
@@ -99,7 +99,7 @@ function App() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <AreaChart title="Crime rate by hour" data={data.hourlyData} />
-              <DelhiMap className="h-96" />
+              <NewYorkMap className="h-96" />
             </div>
           </>
         )}
