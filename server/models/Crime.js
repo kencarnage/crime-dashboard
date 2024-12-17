@@ -13,7 +13,8 @@ const crimeSchema = new mongoose.Schema({
       required: true
     }
   },
-  category: { type: String, required: true },
+  locationName: { type: String, required: true }, // New field for location name
+  category: { type: String, required: true }, // Crime category
   suspect: {
     age: { type: String, required: true },
     sex: { type: String, required: true }

@@ -1,8 +1,9 @@
 import Crime from '../models/Crime.js';
 
+// Main function to fetch crime data
 export async function getCrimeData(filters) {
   const query = buildQuery(filters);
-  
+
   const [
     locationData,
     crimeData,
@@ -28,23 +29,44 @@ export async function getCrimeData(filters) {
   };
 }
 
+// Build query based on filters
 function buildQuery({ suspectAge, suspectSex, victimAge, victimSex }) {
   const query = {};
-  
+
+  // Suspect filters
   if (suspectAge) query['suspect.age'] = suspectAge;
-  if (suspectSex) query['suspect.sex'] = suspectSex;
+  if (suspectSex) {
+    query['suspect.sex'] = convertSexFilter(suspectSex);
+  }
+
+  // Victim filters
   if (victimAge) query['victim.age'] = victimAge;
-  if (victimSex) query['victim.sex'] = victimSex;
-  
+  if (victimSex) {
+    query['victim.sex'] = convertSexFilter(victimSex);
+  }
+
   return query;
 }
 
+// Utility function to map sex filter to database values
+function convertSexFilter(sex) {
+  switch (sex) {
+    case 'Male':
+      return 'M';
+    case 'Female':
+      return 'F';
+    default:
+      return 'U'; // Default case for unknown/undefined
+  }
+}
+
+// Fetch top crime locations
 async function getLocationData(query) {
   const locations = await Crime.aggregate([
     { $match: query },
     {
       $group: {
-        _id: '$location.type',
+        _id: '$locationName',
         value: { $sum: 1 }
       }
     },
@@ -56,12 +78,13 @@ async function getLocationData(query) {
       }
     },
     { $sort: { value: -1 } },
-    { $limit: 4 }
+    { $limit: 3 } // Return top 3 locations
   ]);
-  
+
   return locations;
 }
 
+// Fetch crime categories
 async function getCrimeCategoryData(query) {
   const categories = await Crime.aggregate([
     { $match: query },
@@ -79,10 +102,11 @@ async function getCrimeCategoryData(query) {
       }
     }
   ]);
-  
+
   return categories;
 }
 
+// Fetch hourly crime data
 async function getHourlyData(query) {
   const hourlyStats = await Crime.aggregate([
     { $match: query },
@@ -102,7 +126,6 @@ async function getHourlyData(query) {
     { $sort: { hour: 1 } }
   ]);
 
-  // Ensure all hours are represented
   const hourlyData = Array.from({ length: 24 }, (_, hour) => {
     const found = hourlyStats.find(stat => stat.hour === hour);
     return { hour, value: found ? found.value : 0 };
@@ -111,6 +134,7 @@ async function getHourlyData(query) {
   return hourlyData;
 }
 
+// Fetch map points for the crimes
 async function getMapPoints(query) {
   const points = await Crime.aggregate([
     { $match: query },
@@ -118,12 +142,12 @@ async function getMapPoints(query) {
     {
       $project: {
         _id: 0,
-        x: '$location.coordinates.x',
-        y: '$location.coordinates.y',
+        x: { $arrayElemAt: ['$location.coordinates', 0] },
+        y: { $arrayElemAt: ['$location.coordinates', 1] },
         intensity: { $rand: {} }
       }
     }
   ]);
-  
+
   return points;
 }
