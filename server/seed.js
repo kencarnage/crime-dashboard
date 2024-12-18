@@ -70,7 +70,7 @@ function calculateTopItems(data, key, limit = 3) {
             type: 'Point',
             coordinates,
           },
-          category: row['Crimes by law category'] || 'Unknown',
+          category: row['LAW_CAT_CD'] || 'Unknown',
           suspect: {
             age: row['suspect age group'] || 'Unknown',
             sex: row['suspect sex'] || 'U',
