@@ -18,6 +18,7 @@ export async function getCrimeData(filters) {
     Crime.countDocuments(query)
   ]);
 
+  // Fetch map points based on the query (filtered or unfiltered)
   const mapPoints = await getMapPoints(query);
 
   return {
@@ -137,14 +138,14 @@ async function getHourlyData(query) {
 // Fetch map points for the crimes
 async function getMapPoints(query) {
   const points = await Crime.aggregate([
-    { $match: query },
-    { $limit: 100 },
+    { $match: query }, // Apply filter query if provided
+    { $limit: 100 },    // Limit to 100 points
     {
       $project: {
         _id: 0,
         x: { $arrayElemAt: ['$location.coordinates', 0] },
         y: { $arrayElemAt: ['$location.coordinates', 1] },
-        intensity: { $rand: {} }
+        intensity: { $rand: {} } // Assign a random intensity to each point
       }
     }
   ]);

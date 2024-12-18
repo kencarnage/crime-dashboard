@@ -26,12 +26,16 @@ function App() {
     const updateData = async () => {
       try {
         setLoading(true);
+
+        // Fetch filtered data based on selected filters
         const newData = await fetchCrimeData({
           suspectAge,
           suspectSex,
           victimAge,
           victimSex,
         });
+
+        // Set the fetched data
         setData(newData);
       } catch (error) {
         console.error('Failed to fetch data:', error);
@@ -47,6 +51,7 @@ function App() {
     <div className="min-h-screen bg-gray-900 text-white p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="space-y-4">
+          {/* Suspect Filters */}
           <div className="bg-gray-800 rounded-lg shadow-md p-6 space-y-4">
             <h2 className="text-lg font-semibold text-white">Suspect Background</h2>
             <FilterGroup
@@ -65,6 +70,7 @@ function App() {
             />
           </div>
 
+          {/* Victim Filters */}
           <div className="bg-gray-800 rounded-lg shadow-md p-6 space-y-4">
             <h2 className="text-lg font-semibold text-white">Victim Background</h2>
             <FilterGroup
@@ -84,6 +90,7 @@ function App() {
           </div>
         </div>
 
+        {/* Loading state */}
         {loading ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
@@ -99,7 +106,7 @@ function App() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <AreaChart title="Crime rate by hour" data={data.hourlyData} />
-              <NewYorkMap className="h-96" />
+              <NewYorkMap className="h-96" mapPoints={data.mapPoints} />
             </div>
           </>
         )}
