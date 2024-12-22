@@ -20,14 +20,11 @@ function App() {
     sharePercentage: '0%',
   });
 
-  const [loading, setLoading] = useState(true);
+  const [isDataFetched, setIsDataFetched] = useState(false); // Tracks if data is fetched
 
   useEffect(() => {
     const updateData = async () => {
       try {
-        setLoading(true);
-
-        // Fetch filtered data based on selected filters
         const newData = await fetchCrimeData({
           suspectAge,
           suspectSex,
@@ -37,10 +34,9 @@ function App() {
 
         // Set the fetched data
         setData(newData);
+        setIsDataFetched(true); // Mark data as fetched
       } catch (error) {
         console.error('Failed to fetch data:', error);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -50,53 +46,55 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-900 text-white p-8">
       <div className="max-w-7xl mx-auto space-y-8">
-        <div className="space-y-4">
-          {/* Suspect Filters */}
-          <div className="bg-gray-800 rounded-lg shadow-md p-6 space-y-4">
-            <h2 className="text-lg font-semibold text-white">Suspect Background</h2>
-            <FilterGroup
-              title="Age"
-              filters={['<18', '18-24', '25-44', '45-64', '65+']}
-              activeFilter={suspectAge}
-              onFilterChange={setSuspectAge}
-              onReset={() => setSuspectAge(null)}
-            />
-            <FilterGroup
-              title="Sex"
-              filters={['Male', 'Female']}
-              activeFilter={suspectSex}
-              onFilterChange={setSuspectSex}
-              onReset={() => setSuspectSex(null)}
-            />
+        {/* Filters and Map */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          {/* Filters Section */}
+          <div className="lg:col-span-2 space-y-4">
+            <div className="bg-gray-800 rounded-lg shadow-md p-6 space-y-4">
+              <h2 className="text-lg font-semibold text-white">Suspect Background</h2>
+              <FilterGroup
+                title="Age"
+                filters={['<18', '18-24', '25-44', '45-64', '65+']}
+                activeFilter={suspectAge}
+                onFilterChange={setSuspectAge}
+                onReset={() => setSuspectAge(null)}
+              />
+              <FilterGroup
+                title="Sex"
+                filters={['Male', 'Female']}
+                activeFilter={suspectSex}
+                onFilterChange={setSuspectSex}
+                onReset={() => setSuspectSex(null)}
+              />
+            </div>
+
+            <div className="bg-gray-800 rounded-lg shadow-md p-6 space-y-4">
+              <h2 className="text-lg font-semibold text-white">Victim Background</h2>
+              <FilterGroup
+                title="Age"
+                filters={['<18', '18-24', '25-44', '45-64', '65+']}
+                activeFilter={victimAge}
+                onFilterChange={setVictimAge}
+                onReset={() => setVictimAge(null)}
+              />
+              <FilterGroup
+                title="Sex"
+                filters={['Male', 'Female']}
+                activeFilter={victimSex}
+                onFilterChange={setVictimSex}
+                onReset={() => setVictimSex(null)}
+              />
+            </div>
           </div>
 
-          {/* Victim Filters */}
-          <div className="bg-gray-800 rounded-lg shadow-md p-6 space-y-4">
-            <h2 className="text-lg font-semibold text-white">Victim Background</h2>
-            <FilterGroup
-              title="Age"
-              filters={['<18', '18-24', '25-44', '45-64', '65+']}
-              activeFilter={victimAge}
-              onFilterChange={setVictimAge}
-              onReset={() => setVictimAge(null)}
-            />
-            <FilterGroup
-              title="Sex"
-              filters={['Male', 'Female']}
-              activeFilter={victimSex}
-              onFilterChange={setVictimSex}
-              onReset={() => setVictimSex(null)}
-            />
+          {/* New York Map Section */}
+          <div className="lg:col-span-3 bg-gray-800 rounded-lg shadow-md p-6">
+            <NewYorkMap className="h-full" mapPoints={data.mapPoints} />
           </div>
         </div>
 
-        {/* Loading state */}
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
-            <p className="mt-4 text-gray-300">Loading data...</p>
-          </div>
-        ) : (
+        {/* Safely render components only when data is fetched */}
+        {isDataFetched ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <StatCard title="Share of all crimes" value={data.sharePercentage} />
@@ -104,11 +102,12 @@ function App() {
               <BarChart title="Crimes by law category" data={data.crimeData} />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-0">
               <AreaChart title="Crime rate by hour" data={data.hourlyData} />
-              <NewYorkMap className="h-96" mapPoints={data.mapPoints} />
             </div>
           </>
+        ) : (
+          <p className="text-center text-gray-300">Fetching data, please wait...</p>
         )}
       </div>
     </div>
