@@ -89,7 +89,7 @@ function App() {
 
           {/* New York Map Section */}
           <div className="lg:col-span-3 bg-gray-800 rounded-lg shadow-md p-6">
-            <NewYorkMap className="h-full" mapPoints={data.mapPoints} />
+            <NewYorkMap className="h-96 w-full lg:h-full lg:w-full" mapPoints={data.mapPoints} />
           </div>
         </div>
 

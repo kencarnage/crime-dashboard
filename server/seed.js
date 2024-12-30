@@ -32,19 +32,7 @@ function parseCoordinates(latLon) {
   }
 }
 
-// Function to calculate top items from a list
-function calculateTopItems(data, key, limit = 3) {
-  const counts = data.reduce((acc, item) => {
-    if (!item[key]) return acc; // Skip invalid or missing values
-    acc[item[key]] = (acc[item[key]] || 0) + 1;
-    return acc;
-  }, {});
 
-  return Object.entries(counts)
-    .sort((a, b) => b[1] - a[1]) // Sort by frequency
-    .slice(0, limit) // Take the top N items
-    .map(([item, count]) => ({ item, count })); // Return item and count
-}
 
 (async () => {
   try {
@@ -87,16 +75,6 @@ function calculateTopItems(data, key, limit = 3) {
           await Crime.insertMany(crimes);
           console.log('Database seeded successfully.');
 
-          const topLocations = calculateTopItems(crimes, 'locationName', 3); // Top 3 locations
-          const allCategories = calculateTopItems(crimes, 'category', 100); // All categories
-
-          console.log('\nTop 3 Crime Locations:');
-          console.table(topLocations);
-
-          console.log('\nAll Crimes by Law Category:');
-          console.table(allCategories);
-
-          process.exit(0);
         } catch (error) {
           console.error('Error inserting data:', error.message);
           process.exit(1);

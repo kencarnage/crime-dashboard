@@ -9,16 +9,17 @@ export function NewYorkMap({ className, mapPoints }) {
 
   useEffect(() => {
     // Initialize Leaflet map
-    const map = L.map(mapRef.current).setView([40.7128, -74.0060], 12); // Centered on New York
+    const map = L.map(mapRef.current, {
+      attributionControl: false, // Removes attribution like "Leaflet | © Carto"
+    }).setView([40.7128, -74.0060], 12); // Centered on New York
 
     // Add dark tile layer
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://carto.com/">Carto</a>',
       subdomains: 'abcd',
       maxZoom: 19,
     }).addTo(map);
 
-    // Add GeoJSON layer for boundary
+    // Add GeoJSON layer for New York boundary
     L.geoJSON(newYorkBoundary, {
       style: {
         color: '#FFFFFF', // White outline
@@ -32,7 +33,7 @@ export function NewYorkMap({ className, mapPoints }) {
     markerLayerRef.current = L.layerGroup().addTo(map);
 
     return () => {
-      map.remove();
+      map.remove(); // Cleanup map on component unmount
     };
   }, []);
 
