@@ -15,6 +15,7 @@ const PORT = process.env.PORT || 3001;
 // Connect to MongoDB
 connectDB();
 
+// Endpoint to fetch crime data with filters
 app.post('/api/crime-data', async (req, res) => {
   try {
     const { suspectAge, suspectSex, victimAge, victimSex } = req.body;

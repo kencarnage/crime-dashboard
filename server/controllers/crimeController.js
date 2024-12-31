@@ -9,16 +9,16 @@ export async function getCrimeData(filters) {
     crimeData,
     hourlyData,
     totalCount,
-    filteredCount
+    filteredCount,
   ] = await Promise.all([
     getLocationData(query),
     getCrimeCategoryData(query),
     getHourlyData(query),
     Crime.countDocuments({}),
-    Crime.countDocuments(query)
+    Crime.countDocuments(query),
   ]);
 
-  // Fetch map points based on the query (filtered or unfiltered)
+  // Fetch map points based on the query
   const mapPoints = await getMapPoints(query);
 
   return {
@@ -36,15 +36,11 @@ function buildQuery({ suspectAge, suspectSex, victimAge, victimSex }) {
 
   // Suspect filters
   if (suspectAge) query['suspect.age'] = suspectAge;
-  if (suspectSex) {
-    query['suspect.sex'] = convertSexFilter(suspectSex);
-  }
+  if (suspectSex) query['suspect.sex'] = convertSexFilter(suspectSex);
 
   // Victim filters
   if (victimAge) query['victim.age'] = victimAge;
-  if (victimSex) {
-    query['victim.sex'] = convertSexFilter(victimSex);
-  }
+  if (victimSex) query['victim.sex'] = convertSexFilter(victimSex);
 
   return query;
 }
@@ -68,18 +64,18 @@ async function getLocationData(query) {
     {
       $group: {
         _id: '$locationName',
-        value: { $sum: 1 }
-      }
+        value: { $sum: 1 },
+      },
     },
     {
       $project: {
         _id: 0,
         label: '$_id',
-        value: 1
-      }
+        value: 1,
+      },
     },
     { $sort: { value: -1 } },
-    { $limit: 3 } // Return top 3 locations
+    { $limit: 3 }, // Return top 3 locations
   ]);
 
   return locations;
@@ -92,16 +88,16 @@ async function getCrimeCategoryData(query) {
     {
       $group: {
         _id: '$category',
-        value: { $sum: 1 }
-      }
+        value: { $sum: 1 },
+      },
     },
     {
       $project: {
         _id: 0,
         label: '$_id',
-        value: 1
-      }
-    }
+        value: 1,
+      },
+    },
   ]);
 
   return categories;
@@ -114,21 +110,21 @@ async function getHourlyData(query) {
     {
       $group: {
         _id: { $hour: '$date' },
-        value: { $sum: 1 }
-      }
+        value: { $sum: 1 },
+      },
     },
     {
       $project: {
         _id: 0,
         hour: '$_id',
-        value: 1
-      }
+        value: 1,
+      },
     },
-    { $sort: { hour: 1 } }
+    { $sort: { hour: 1 } },
   ]);
 
   const hourlyData = Array.from({ length: 24 }, (_, hour) => {
-    const found = hourlyStats.find(stat => stat.hour === hour);
+    const found = hourlyStats.find((stat) => stat.hour === hour);
     return { hour, value: found ? found.value : 0 };
   });
 
@@ -136,19 +132,20 @@ async function getHourlyData(query) {
 }
 
 // Fetch map points for the crimes
+// Fetch map points for the crimes
 async function getMapPoints(query) {
   const points = await Crime.aggregate([
     { $match: query }, // Apply filter query if provided
-    { $limit: 100 },    // Limit to 100 points
     {
       $project: {
         _id: 0,
         x: { $arrayElemAt: ['$location.coordinates', 0] },
         y: { $arrayElemAt: ['$location.coordinates', 1] },
-        intensity: { $rand: {} } // Assign a random intensity to each point
+        intensity: { $rand: {} }, // Assign a random intensity to each point
       }
     }
   ]);
 
   return points;
 }
+

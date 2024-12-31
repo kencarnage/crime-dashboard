@@ -1,11 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import 'leaflet.heat'; // Import Leaflet heatmap plugin
 import newYorkBoundary from '../assets/newyork-boundary.json'; // GeoJSON for New York's boundary
 
 export function NewYorkMap({ className, mapPoints }) {
   const mapRef = useRef(null);
-  const markerLayerRef = useRef(null);
+  const heatLayerRef = useRef(null);
 
   useEffect(() => {
     // Initialize Leaflet map
@@ -29,8 +30,15 @@ export function NewYorkMap({ className, mapPoints }) {
       },
     }).addTo(map);
 
-    // Layer to hold markers
-    markerLayerRef.current = L.layerGroup().addTo(map);
+    // Initialize heatmap layer with minimal blur and small radius
+    const heatLayer = L.heatLayer([], {
+      radius: 3, // Very small radius for sharp dots
+      blur: 1,   // No blur for sharp points
+      maxZoom: 17,
+      gradient: { 1: 'red' }, // Solid blue for sharp dots
+    }).addTo(map);
+
+    heatLayerRef.current = heatLayer;
 
     return () => {
       map.remove(); // Cleanup map on component unmount
@@ -38,21 +46,13 @@ export function NewYorkMap({ className, mapPoints }) {
   }, []);
 
   useEffect(() => {
-    if (!mapPoints || !markerLayerRef.current) return;
+    if (!mapPoints || !heatLayerRef.current) return;
 
-    // Clear existing markers
-    markerLayerRef.current.clearLayers();
+    // Prepare heatmap data: [latitude, longitude, intensity]
+    const heatmapData = mapPoints.map((point) => [point.y, point.x, point.intensity || 0.5]);
 
-    // Add new crime points as red circle markers
-    mapPoints.forEach((point) => {
-      const { x, y } = point; // x = longitude, y = latitude
-      L.circleMarker([y, x], {
-        radius: 5,
-        color: 'red',
-        fillColor: 'red',
-        fillOpacity: 0.7,
-      }).addTo(markerLayerRef.current);
-    });
+    // Update heatmap layer
+    heatLayerRef.current.setLatLngs(heatmapData);
   }, [mapPoints]);
 
   return <div ref={mapRef} className={`map-container ${className}`} />;
