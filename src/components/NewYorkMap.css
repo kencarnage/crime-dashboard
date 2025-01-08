@@ -1,0 +1,13 @@
+.custom-map-label {
+    background: linear-gradient(90deg, #1e3c72, #2a5298); /* Gradient background */
+    color: #ffffff; /* White text for contrast */
+    font-size: 14px; /* Slightly smaller font for professionalism */
+    font-weight: 600; /* Semi-bold for clarity */
+    padding: 8px 12px; /* Balanced padding for aesthetics */
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
+    text-align: center;
+    font-family: 'Arial', sans-serif; /* Clean, professional font */
+    letter-spacing: 0.5px; /* Slight spacing for readability */
+  }
+  

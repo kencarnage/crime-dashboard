@@ -11,18 +11,23 @@
     "seed": "node server/seed.js"
   },
   "dependencies": {
+    "@deck.gl/core": "^9.0.38",
+    "@deck.gl/layers": "^9.0.38",
+    "@deck.gl/react": "^9.0.38",
     "cors": "^2.8.5",
     "csv-parser": "^3.0.0",
     "dotenv": "^16.4.5",
     "express": "^4.18.2",
     "leaflet": "^1.9.4",
     "leaflet.heat": "^0.2.0",
+    "leaflet.markercluster": "^1.5.3",
     "lucide-react": "^0.344.0",
     "moment": "^2.30.1",
     "mongodb": "^6.11.0",
     "mongoose": "^8.2.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-map-gl": "^7.1.8"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",

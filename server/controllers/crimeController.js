@@ -26,7 +26,7 @@ export async function getCrimeData(filters) {
     crimeData,
     hourlyData,
     mapPoints,
-    sharePercentage: `${Math.round((filteredCount / totalCount) * 100)}%`
+    sharePercentage: `${Math.round((filteredCount / totalCount) * 100)}%`,
   };
 }
 
@@ -131,21 +131,18 @@ async function getHourlyData(query) {
   return hourlyData;
 }
 
-// Fetch map points for the crimes
-// Fetch map points for the crimes
+// Fetch raw map points for the crimes
 async function getMapPoints(query) {
   const points = await Crime.aggregate([
-    { $match: query }, // Apply filter query if provided
+    { $match: query },
     {
       $project: {
         _id: 0,
         x: { $arrayElemAt: ['$location.coordinates', 0] },
         y: { $arrayElemAt: ['$location.coordinates', 1] },
-        intensity: { $rand: {} }, // Assign a random intensity to each point
-      }
-    }
+      },
+    },
   ]);
 
   return points;
 }
-

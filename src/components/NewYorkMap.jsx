@@ -1,59 +1,167 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import 'leaflet.heat'; // Import Leaflet heatmap plugin
-import newYorkBoundary from '../assets/newyork-boundary.json'; // GeoJSON for New York's boundary
+import 'leaflet.heat';
+import newYorkBoundary from '../assets/newyork-boundary.json';
+import './NewYorkMap.css';
 
 export function NewYorkMap({ className, mapPoints }) {
   const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
   const heatLayerRef = useRef(null);
+  const redPointLayerRef = useRef(null);
+  const [zoomLevel, setZoomLevel] = useState(14);
+
+  // Utility: Chunk function to process points in batches
+  const chunkArray = (array, chunkSize) => {
+    const chunks = [];
+    for (let i = 0; i < array.length; i += chunkSize) {
+      chunks.push(array.slice(i, i + chunkSize));
+    }
+    return chunks;
+  };
 
   useEffect(() => {
-    // Initialize Leaflet map
+    // Initialize the map
     const map = L.map(mapRef.current, {
-      attributionControl: false, // Removes attribution like "Leaflet | © Carto"
-    }).setView([40.7128, -74.0060], 12); // Centered on New York
+      attributionControl: false,
+    }).setView([40.7128, -74.0060], 14);
 
-    // Add dark tile layer
+    mapInstanceRef.current = map;
+
+    // Add tile layer
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       subdomains: 'abcd',
       maxZoom: 19,
     }).addTo(map);
 
-    // Add GeoJSON layer for New York boundary
+    // Add New York boundary
     L.geoJSON(newYorkBoundary, {
       style: {
-        color: '#FFFFFF', // White outline
+        color: '#FFFFFF',
         weight: 3,
         opacity: 1,
-        fillOpacity: 0, // No fill
+        fillOpacity: 0,
       },
     }).addTo(map);
 
-    // Initialize heatmap layer with minimal blur and small radius
-    const heatLayer = L.heatLayer([], {
-      radius: 3, // Very small radius for sharp dots
-      blur: 1,   // No blur for sharp points
-      maxZoom: 17,
-      gradient: { 1: 'red' }, // Solid blue for sharp dots
-    }).addTo(map);
+    // Add New York label
+    const nyLabel = L.control({ position: 'topright' });
+    nyLabel.onAdd = function () {
+      const div = L.DomUtil.create('div', 'custom-map-label');
+      div.innerHTML = '<span>New York Map</span>';
+      return div;
+    };
+    nyLabel.addTo(map);
 
-    heatLayerRef.current = heatLayer;
+    // Zoom level change listener
+    map.on('zoomend', () => setZoomLevel(map.getZoom()));
 
     return () => {
-      map.remove(); // Cleanup map on component unmount
+      map.remove();
     };
   }, []);
 
   useEffect(() => {
-    if (!mapPoints || !heatLayerRef.current) return;
+    if (!mapPoints || !mapInstanceRef.current) return;
 
-    // Prepare heatmap data: [latitude, longitude, intensity]
-    const heatmapData = mapPoints.map((point) => [point.y, point.x, point.intensity || 0.5]);
+    const map = mapInstanceRef.current;
 
-    // Update heatmap layer
-    heatLayerRef.current.setLatLngs(heatmapData);
-  }, [mapPoints]);
+    const updateHeatmap = () => {
+      if (heatLayerRef.current) {
+        map.removeLayer(heatLayerRef.current);
+      }
+
+      const bounds = map.getBounds();
+      const visiblePoints = mapPoints.filter((point) =>
+        bounds.contains([point.y, point.x])
+      );
+
+      const heatData = visiblePoints.map((point) => [point.y, point.x, 0.2]);
+
+      const heatLayer = L.heatLayer(heatData, {
+        radius: 8,
+        blur: 20,
+        maxZoom: 17,
+        minOpacity: 0.2,
+        gradient: {
+          0.0: 'rgba(255, 0, 0, 0.1)', 
+          0.5: 'rgba(255, 0, 0, 0.5)', 
+          1.0: 'rgba(255, 0, 0, 1.0)', 
+        },
+      });
+
+      heatLayer.addTo(map);
+      heatLayerRef.current = heatLayer;
+    };
+
+    const updateRedPoints = () => {
+      if (redPointLayerRef.current) {
+        map.removeLayer(redPointLayerRef.current);
+      }
+
+      const bounds = map.getBounds();
+      const visiblePoints = mapPoints.filter((point) =>
+        bounds.contains([point.y, point.x])
+      );
+
+      const canvasLayer = L.canvas({ padding: 0.5 });
+      map.addLayer(canvasLayer);
+
+      const pointChunks = chunkArray(visiblePoints, 25000);
+      const renderChunk = (chunkIndex = 0) => {
+        if (chunkIndex >= pointChunks.length) return;
+
+        pointChunks[chunkIndex].forEach((point) => {
+          L.circleMarker([point.y, point.x], {
+            radius: 0.005,
+            color: 'red',
+            fillColor: 'red',
+            fillOpacity: 1,
+            renderer: canvasLayer,
+          }).addTo(map);
+        });
+
+        setTimeout(() => renderChunk(chunkIndex + 1), 50);
+      };
+
+      renderChunk();
+      redPointLayerRef.current = canvasLayer;
+    };
+
+    const updateLayers = () => {
+      if (zoomLevel < 16) {
+        updateHeatmap();
+      } else {
+        updateRedPoints();
+      }
+    };
+
+    const debouncedUpdate = debounce(updateLayers, 100);
+
+    map.on('moveend', debouncedUpdate);
+    map.on('zoomend', debouncedUpdate);
+
+    updateLayers();
+
+    return () => {
+      if (heatLayerRef.current) heatLayerRef.current.remove();
+      if (redPointLayerRef.current) redPointLayerRef.current.remove();
+
+      map.off('moveend', debouncedUpdate);
+      map.off('zoomend', debouncedUpdate);
+    };
+  }, [mapPoints, zoomLevel]);
 
   return <div ref={mapRef} className={`map-container ${className}`} />;
+}
+
+// Debounce utility
+function debounce(func, wait) {
+  let timeout;
+  return function (...args) {
+    const context = this;
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(context, args), wait);
+  };
 }
