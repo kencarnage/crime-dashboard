@@ -75,7 +75,7 @@ async function getLocationData(query) {
       },
     },
     { $sort: { value: -1 } },
-    { $limit: 3 }, // Return top 3 locations
+   // { $limit: 20 }, // Return top 3 locations
   ]);
 
   return locations;

@@ -3,7 +3,7 @@ export function calculateMaxValue(data, key = 'value') {
 }
 
 export function generateHourLabels() {
-  return [0, 6, 12, 18, 23];
+  return [0, 6, 12, 18,23];
 }
 
 export function generateRandomPoints(count) {
@@ -11,4 +11,13 @@ export function generateRandomPoints(count) {
     x: Math.random() * 100,
     y: Math.random() * 100
   }));
+}
+// src/utils/chartHelpers.js
+export function generateYAxisLabels(maxValue) {
+  const step = maxValue / 5;
+  const labels = [];
+  for (let i = 0; i <= 5; i++) {
+    labels.push(Math.round(i * step));
+  }
+  return labels;
 }

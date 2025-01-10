@@ -96,7 +96,9 @@ function App() {
         {/* Safely render components only when data is fetched */}
         {isDataFetched ? (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div
+              className="grid grid-cols-1 lg:grid-cols-[1fr,4fr,2fr] gap-6"
+            >
               <StatCard title="Share of all crimes" value={data.sharePercentage} />
               <BarChart title="Top crime locations" data={data.locationData} />
               <BarChart title="Crimes by law category" data={data.crimeData} />

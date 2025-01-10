@@ -1,5 +1,6 @@
+// src/components/AreaChart.jsx
 import React from 'react';
-import { calculateMaxValue, generateHourLabels } from '../utils/chartHelpers';
+import { calculateMaxValue, generateHourLabels, generateYAxisLabels } from '../utils/chartHelpers';
 
 export function AreaChart({ data, title, className = '' }) {
   const maxValue = calculateMaxValue(data);
@@ -8,6 +9,8 @@ export function AreaChart({ data, title, className = '' }) {
     const y = 100 - (item.value / maxValue) * 100;
     return `${x},${y}`;
   }).join(' ');
+
+  const yAxisLabels = generateYAxisLabels(maxValue);
 
   return (
     <div className={`bg-gray-800 rounded-lg shadow-md p-6 ${className}`}>
@@ -31,9 +34,20 @@ export function AreaChart({ data, title, className = '' }) {
             strokeWidth="0.5"
           />
         </svg>
+        
+        {/* X-axis labels for hours */}
         <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-gray-400">
           {generateHourLabels().map((hour) => (
             <span key={hour}>{hour}:00</span>
+          ))}
+        </div>
+        
+        {/* Y-axis labels for crime rate */}
+        <div className="absolute left-0 top-0 text-xs text-gray-400 flex flex-col justify-between h-full">
+          {yAxisLabels.map((label, index) => (
+            <span key={index} className="absolute left-0" style={{ bottom: `${(index / (yAxisLabels.length - 1)) * 100}%` }}>
+              {label}
+            </span>
           ))}
         </div>
       </div>
