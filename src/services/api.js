@@ -1,4 +1,4 @@
-const API_URL = 'https://crime-dashboard-0n8g.onrender.com/api';
+const API_URL = 'http://localhost:3001/api';
 
 export async function fetchCrimeData(filters) {
   try {
