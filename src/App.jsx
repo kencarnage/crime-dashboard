@@ -21,9 +21,11 @@ function App() {
   });
 
   const [isDataFetched, setIsDataFetched] = useState(false); // Tracks if data is fetched
+  const [isLoading, setIsLoading] = useState(false); // Tracks loading state
 
   useEffect(() => {
     const updateData = async () => {
+      setIsLoading(true); // Start loading indicator
       try {
         const newData = await fetchCrimeData({
           suspectAge,
@@ -37,6 +39,8 @@ function App() {
         setIsDataFetched(true); // Mark data as fetched
       } catch (error) {
         console.error('Failed to fetch data:', error);
+      } finally {
+        setIsLoading(false); // Stop loading indicator
       }
     };
 
@@ -93,23 +97,26 @@ function App() {
           </div>
         </div>
 
-        {/* Safely render components only when data is fetched */}
-        {isDataFetched ? (
-          <>
-            <div
-              className="grid grid-cols-1 lg:grid-cols-[1fr,4fr,2fr] gap-6"
-            >
-              <StatCard title="Share of all crimes" value={data.sharePercentage} />
-              <BarChart title="Top crime locations" data={data.locationData} />
-              <BarChart title="Crimes by law category" data={data.crimeData} />
-            </div>
-
-            <div className="grid grid-cols-1 gap-0">
-              <AreaChart title="Crime rate by hour" data={data.hourlyData} />
-            </div>
-          </>
+        {/* Loading or Data Display */}
+        {isLoading ? (
+          <div className="flex justify-center items-center h-32">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-300"></div>
+            <p className="ml-4 text-gray-300">Fetching data, please wait...</p>
+          </div>
         ) : (
-          <p className="text-center text-gray-300">Fetching data, please wait...</p>
+          isDataFetched && (
+            <>
+              <div className="grid grid-cols-1 lg:grid-cols-[1fr,4fr,2fr] gap-6">
+                <StatCard title="Share of all crimes" value={data.sharePercentage} />
+                <BarChart title="Top crime locations" data={data.locationData} />
+                <BarChart title="Crimes by law category" data={data.crimeData} />
+              </div>
+
+              <div className="grid grid-cols-1 gap-0">
+                <AreaChart title="Crime rate by hour" data={data.hourlyData} />
+              </div>
+            </>
+          )
         )}
       </div>
     </div>
