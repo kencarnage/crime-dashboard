@@ -20,10 +20,12 @@ function App() {
     sharePercentage: '0%',
   });
 
-  const [isDataFetched, setIsDataFetched] = useState(false);
+  const [isDataFetched, setIsDataFetched] = useState(false); // Tracks if data is fetched
+  const [isLoading, setIsLoading] = useState(false); // Tracks loading during filter application
 
   useEffect(() => {
     const updateData = async () => {
+      setIsLoading(true); // Start loading animation
       try {
         const newData = await fetchCrimeData({
           suspectAge,
@@ -32,10 +34,13 @@ function App() {
           victimSex,
         });
 
+        // Set the fetched data
         setData(newData);
-        setIsDataFetched(true);
+        setIsDataFetched(true); // Mark data as fetched
       } catch (error) {
         console.error('Failed to fetch data:', error);
+      } finally {
+        setIsLoading(false); // End loading animation
       }
     };
 
@@ -45,7 +50,9 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-900 text-white p-8">
       <div className="max-w-7xl mx-auto space-y-8">
+        {/* Filters and Map */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          {/* Filters Section */}
           <div className="lg:col-span-2 space-y-4">
             <div className="bg-gray-800 rounded-lg shadow-md p-6 space-y-4">
               <h2 className="text-lg font-semibold text-white">Suspect Background</h2>
@@ -84,30 +91,34 @@ function App() {
             </div>
           </div>
 
+          {/* New York Map Section */}
           <div className="lg:col-span-3 bg-gray-800 rounded-lg shadow-md p-6">
             <NewYorkMap className="h-96 w-full lg:h-full lg:w-full" mapPoints={data.mapPoints} />
           </div>
         </div>
 
-        {isDataFetched ? (
-          <>
-            <div
-              className="grid grid-cols-1 lg:grid-cols-[1fr,4fr,2fr] gap-6"
-            >
-              <StatCard title="Share of all crimes" value={data.sharePercentage} />
-              <BarChart title="Top crime locations" data={data.locationData} />
-              <BarChart title="Crimes by law category" data={data.crimeData} />
+        {/* Show loader if data is being fetched */}
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="flex flex-col items-center space-y-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-solid"></div>
+              <p className="text-gray-300 text-lg font-medium">Fetching data, please wait...</p>
             </div>
-
-            <div className="grid grid-cols-1 gap-0">
-              <AreaChart title="Crime rate by hour" data={data.hourlyData} />
-            </div>
-          </>
-        ) : (
-          <div className="flex justify-center items-center h-96">
-            <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
-            <span className="ml-4 text-xl font-semibold text-gray-300">Fetching data, please wait...</span>
           </div>
+        ) : (
+          isDataFetched && (
+            <>
+              <div className="grid grid-cols-1 lg:grid-cols-[1fr,4fr,2fr] gap-6">
+                <StatCard title="Share of all crimes" value={data.sharePercentage} />
+                <BarChart title="Top crime locations" data={data.locationData} />
+                <BarChart title="Crimes by law category" data={data.crimeData} />
+              </div>
+
+              <div className="grid grid-cols-1 gap-0">
+                <AreaChart title="Crime rate by hour" data={data.hourlyData} />
+              </div>
+            </>
+          )
         )}
       </div>
     </div>
