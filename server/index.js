@@ -8,8 +8,16 @@ import { getCrimeData } from './controllers/crimeController.js';
 dotenv.config();
 
 const app = express();
-app.use(cors());
 app.use(express.json());
+
+// Allow specific origins for CORS (add your frontend URL if known)
+app.use(
+  cors({
+    origin: '*', // Allow all origins
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+);
 
 const PORT = process.env.PORT || 3001;
 
@@ -20,8 +28,19 @@ connectDB();
 app.post('/api/crime-data', async (req, res) => {
   try {
     const { suspectAge, suspectSex, victimAge, victimSex } = req.body;
+
+    // Validate the input data
+    if (!suspectAge || !suspectSex || !victimAge || !victimSex) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+
     const data = await getCrimeData({ suspectAge, suspectSex, victimAge, victimSex });
-    res.json(data);
+
+    if (!data || data.length === 0) {
+      return res.status(404).json({ error: 'No data found' });
+    }
+
+    res.status(200).json(data);
   } catch (error) {
     console.error('Error fetching crime data:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -30,6 +49,8 @@ app.post('/api/crime-data', async (req, res) => {
 
 // Serve frontend build files
 const __dirname = path.resolve();
+
+// Ensure correct path to serve the frontend
 app.use(express.static(path.join(__dirname, 'dist')));
 
 app.get('*', (req, res) => {
