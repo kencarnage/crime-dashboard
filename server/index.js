@@ -53,7 +53,7 @@ const __dirname = path.resolve();
 // Ensure correct path to serve the frontend
 app.use(express.static(path.join(__dirname, 'dist')));
 
-app.get('*', (req, res) => {
+app.get('https://crime-dashboard-so3l.onrender.com', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist/index.html'));
 });
 
