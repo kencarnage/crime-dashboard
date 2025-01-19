@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3001/api';
+const API_URL = process.env.PORT || '/api';
 
 export async function fetchCrimeData(filters) {
   try {
