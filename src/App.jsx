@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FilterGroup } from './components/FilterGroup';
 import { StatCard } from './components/StatCard';
 import { BarChart } from './components/BarChart';
@@ -20,12 +20,14 @@ function App() {
     sharePercentage: '0%',
   });
 
-  const [isDataFetched, setIsDataFetched] = useState(false); // Tracks if data is fetched
-  const [isLoading, setIsLoading] = useState(false); // Tracks loading during filter application
+  const [isLoading, setIsLoading] = useState(false); // Loading state
+  const requestId = useRef(0); // Reference to track the latest fetch request
 
   useEffect(() => {
     const updateData = async () => {
-      setIsLoading(true); // Start loading animation
+      setIsLoading(true); // Set loading to true while fetching data
+      const currentRequestId = ++requestId.current; // Increment request ID to track
+
       try {
         const newData = await fetchCrimeData({
           suspectAge,
@@ -34,18 +36,21 @@ function App() {
           victimSex,
         });
 
-        // Set the fetched data
-        setData(newData);
-        setIsDataFetched(true); // Mark data as fetched
+        // Only update state if this request ID is the latest (i.e., it hasn't been superseded by a new request)
+        if (currentRequestId === requestId.current) {
+          setData(newData);
+        }
       } catch (error) {
         console.error('Failed to fetch data:', error);
       } finally {
-        setIsLoading(false); // End loading animation
+        if (currentRequestId === requestId.current) {
+          setIsLoading(false); // Stop loading animation if this is the last request
+        }
       }
     };
 
     updateData();
-  }, [suspectAge, suspectSex, victimAge, victimSex]);
+  }, [suspectAge, suspectSex, victimAge, victimSex]); // Effect triggered on filter change
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-8">
@@ -106,7 +111,7 @@ function App() {
             </div>
           </div>
         ) : (
-          isDataFetched && (
+          data.locationData.length > 0 && (
             <>
               <div className="grid grid-cols-1 lg:grid-cols-[1fr,4fr,2fr] gap-6">
                 <StatCard title="Share of all crimes" value={data.sharePercentage} />
