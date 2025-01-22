@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.heat';
+import 'leaflet-fullscreen/dist/leaflet.fullscreen.css';  // Import fullscreen CSS
+import 'leaflet-fullscreen';  // Import the fullscreen plugin
 import newYorkBoundary from '../assets/newyork-boundary.json';
 import './NewYorkMap.css';
 
@@ -12,17 +14,7 @@ export function NewYorkMap({ className, mapPoints }) {
   const redPointLayerRef = useRef(null);
   const [zoomLevel, setZoomLevel] = useState(14);
 
-  // Utility: Chunk function to process points in batches
-  const chunkArray = (array, chunkSize) => {
-    const chunks = [];
-    for (let i = 0; i < array.length; i += chunkSize) {
-      chunks.push(array.slice(i, i + chunkSize));
-    }
-    return chunks;
-  };
-
   useEffect(() => {
-    // Initialize the map
     const map = L.map(mapRef.current, {
       attributionControl: false,
     }).setView([40.7128, -74.0060], 14);
@@ -54,8 +46,24 @@ export function NewYorkMap({ className, mapPoints }) {
     };
     nyLabel.addTo(map);
 
+    // Add fullscreen control
+    L.control.fullscreen({
+      position: 'topright', // You can place it wherever you like
+      title: 'Toggle Fullscreen',
+      titleCancel: 'Exit Fullscreen',
+      content: '🗖', // You can replace this with any icon you prefer
+    }).addTo(map);
+
+    // Listen for the fullscreen change event to handle resize
+    map.on('fullscreenchange', () => {
+      map.invalidateSize();  // Force map resize after fullscreen toggle
+    });
+
     // Zoom level change listener
-    map.on('zoomend', () => setZoomLevel(map.getZoom()));
+    map.on('zoomend', () => {
+      setZoomLevel(map.getZoom());
+      map.invalidateSize();  // Force map resize after zoom
+    });
 
     return () => {
       map.remove();
@@ -164,4 +172,12 @@ function debounce(func, wait) {
     clearTimeout(timeout);
     timeout = setTimeout(() => func.apply(context, args), wait);
   };
+}
+
+function chunkArray(array, chunkSize) {
+  const chunks = [];
+  for (let i = 0; i < array.length; i += chunkSize) {
+    chunks.push(array.slice(i, i + chunkSize));
+  }
+  return chunks;
 }
